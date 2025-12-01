@@ -1,61 +1,167 @@
+# Claim Ally: Automated Insurance Denial Appeal Agent
 
-#### 1. Problem Statement
+## 1. Problem Statement
 
-I recognize that the digital entertainment landscape is saturated with content, creating a "paradox of choice" that often overwhelms users. I designed this project to directly address the critical challenge of content discovery by building a sophisticated, multi-faceted movie recommendation system. My goal was to move beyond simple popularity rankings and create an engine that delivers personalized, context-aware, and high-quality movie suggestions through a variety of data-driven techniques.
+The Claim Ally Agent is a specialized, multi-agent system designed to streamline and automate the complex process of appealing denied insurance claims. By integrating real-time eligibility checks, web research for evidence, and an iterative, self-correcting refinement loop, this system ensures that the final appeal letter is timely, factually supported, professionally toned, and persuasive.
 
+## Key Capabilities
 
-#### 2. Project Objectives
+Timeliness Check: Instantly validates appeal eligibility against a 180-day deadline.
 
-My primary objective was to build a robust engine capable of generating meaningful recommendations through three distinct, yet complementary, approaches:
+Evidence Generation: Automatically researches denial reasons using Google Search to gather supporting facts.
 
-- Demographic Filtering: I implemented this to provide a baseline for "generally popular" and "highly-rated" movies to all users, segmented by genre.
-- Content-Based Filtering: I designed a system to recommend movies similar to a given title based on its intrinsic features, such as plot, cast, crew, and keywords.
-- Collaborative Filtering: I built a model to predict a user's preference by analyzing patterns from the collective ratings of all users.
-- Hybrid Model: Finally, I combined the strengths of content-based and collaborative filtering to deliver superior, personalized recommendations that account for both movie similarity and individual user taste.
+Iterative Refinement: Uses a 3-step loop (Writer -> Reviewer -> Refiner) to polish the appeal letter for maximum effectiveness.
 
-#### 3. Methodology & Technical Approach
+Structured Workflow: Guides the user through data collection (denial date, policy ID, denial reason) before initiating the appeal process.
 
-I managed the project through a structured, end-to-end pipeline, starting with data acquisition and preprocessing. I sourced my data from Kaggle's The Movies Dataset, specifically working with movies_metadata.csv, credits.csv, keywords.csv, ratings_small.csv, and links_small.csv. My preprocessing involved cleaning the data by handling missing values, parsing complex nested JSON fields for genres, cast, crew, and keywords, converting data types for consistency, and finally merging all the datasets into a single, unified dataframe for analysis.
+## Problem Statement & Motivation
 
-**b. Demographic Filtering (Genre & Popularity):**
+Insurance claim appeals are often denied due to improper filing, missed deadlines, or a lack of sufficient medical evidence. For individuals, navigating the appeal process is complex, stressful, and time-sensitive. The primary challenges addressed by this agent are:
 
-To establish a baseline for "generally popular" movies, I developed a demographic filtering system. I implemented IMDB's weighted rating formula to fairly score movies, balancing their average rating (R) against the total number of votes (v) to ensure statistical significance. I then engineered a function that leverages this formula to dynamically generate ranked lists of the top movies for any genre a user selects.
+Time Sensitivity: The strict 180-day limit for appeals requires immediate action.
 
+Complexity & Research: Successfully appealing often requires detailed research into medical policy, legal precedent, or standard practices, which is time-consuming.
 
+Tone and Format: Appeal letters must be professional, factual, and persuasive—qualities difficult to achieve under emotional duress.
 
-**c. Content-Based Filtering:**
-a. Content-Based Filtering:
-To recommend movies based on their intrinsic qualities, I developed two content-based models. First, I engineered a plot-based system using TF-IDF Vectorization on movie overviews and taglines to measure textual similarity. To create a more nuanced system, I built an enhanced metadata model by creating a feature "soup" from the top-billed cast, director, and keywords. After processing these keywords through stemming and relevance filtering, I applied Count Vectorization to build a powerful similarity matrix. I then encapsulated this logic into a function that returns a list of the most similar movies for any given title.
+The Claim Ally Agent solves these issues by automating the eligibility check, research, drafting, and quality control steps, drastically improving the chances of a successful, compliant appeal.
 
-b. Collaborative Filtering (Model-Based):
-To incorporate user behavior into the recommendations, I built a collaborative filtering system. I implemented the Singular Value Decomposition (SVD) algorithm using the Surprise library. After training the model on the ratings_small dataset, I rigorously validated its performance through 5-fold cross-validation, achieving a strong RMSE of ~0.897, confirming its predictive power. The final model is capable of accurately predicting how a specific user would rate any movie in the database.
+Solution: The Claims Ally Agent Architecture
 
-**e. Hybrid Recommendation Engine:**
+The system utilizes a specialized Sequential Agent (ReviewPipeline) nested within an iterative Loop Agent (LetterRefinementLoop), all coordinated by a Root Agent (claim_ally_agent). This setup ensures a high-quality, fact-based output.
 
-I developed a core function that synergizes the content-based and collaborative methods.
-For a given user and movie title, the engine I built:
+## Agent Composition
 
-Uses my content-based model to find a list of similar movies.
-Uses my trained SVD model to predict that specific user's rating for each of these similar movies.
-Ranks the final list by these predicted ratings and returns the top 10 personalized recommendations.
+Root Agent (claim_ally_agent): Acts as the primary orchestrator and initial validator. It uses the check_appeal_eligibility function tool to gate the main workflow.
 
-#### 4. Key Results & Outputs
+Review Pipeline (SequentialAgent): The core process, executed only when the claim is eligible.
 
-- Demographic System: 
-I validated this system by having it generate accurate lists of top-rated films like Inception and The Dark Knight, as well as curated genre charts, such as ranking Forrest Gump among the top Romance films.
-- Content-Based System:
-The effectiveness of my model was clear when querying The Dark Knight returned a highly relevant list including direct sequels like The Dark Knight Rises and thematically similar films from the same director, like The Prestige.
-- Hybrid System:
-The power of my integrated approach was proven when, for a specific user and the movie Avatar, the engine delivered a personalized list of sci-fi/action classics like Aliens and Terminator 2, which the SVD model predicted that particular user would rate highly.
+ResearchAssistant (LlmAgent): Gathers external, real-time evidence using the Google Search tool based on the denial reason.
 
-#### 5. Technologies Used
-- Programming Language: Python
-- Libraries & Frameworks: I applied Pandas, NumPy, Scikit-learn, Surprise (SVD), and NLTK to handle everything from data processing to model deployment.
-- Core Techniques: I successfully implemented techniques like TF-IDF Vectorization, Cosine Similarity, and Matrix Factorization (SVD) to power the different recommendation models.
+LetterWriter (LlmAgent): Creates the initial appeal letter, explicitly instructed to integrate the collected {evidence}.
 
+LetterRefinementLoop (LoopAgent): Iteratively improves the letter.
 
-#### 6. Conclusion
+FinalOutputPresenter (LlmAgent): Presents the final, approved letter text.
 
-In this project, I demonstrated my comprehensive understanding of modern recommendation system paradigms. By implementing and integrating Demographic, Content-Based, Collaborative, and Hybrid techniques, I built a powerful and versatile movie recommendation engine. This system effectively addresses the initial problem of content discovery, as it is capable of serving both general trending content and deeply personalized suggestions, thereby significantly enhancing the user experience on any movie-based platform.
+Letter Refinement Loop (LoopAgent): A critical quality control mechanism, configured for a maximum of 3 iterations.
 
----
+reviewer (LlmAgent): Acts as the internal critic, comparing the {appealletter} against the original {evidence}. It provides feedback or, if approved, returns the exact string "APPROVED" to trigger the exit loop.
+
+RefinerAgent (Agent): Receives the critique. It is explicitly designed to either rewrite the letter based on the feedback or call the exit_loop function tool if the review result is exactly "APPROVED".
+
+## Detailed Process Flow
+
+The appeal process follows a five-stage flow:
+
+Input and Eligibility Check:
+
+The user provides the date_of_denial in YYYY-MM-DD format.
+
+The Root Agent immediately calls the check_appeal_eligibility function.
+
+If ineligible (deadline passed), the process stops.
+
+If eligible, the Root Agent collects policy ID and reason for denial.
+
+Evidence Collection:
+
+The Root Agent activates the ReviewPipeline.
+
+ResearchAssistant performs a Google Search on the denial reason to find clinical guidelines, policy details, or supporting arguments.
+
+Initial Drafting:
+
+LetterWriter receives the initial inputs and the newly generated {evidence}.
+
+It crafts the first draft of the appeal letter ({appealletter}).
+
+Iterative Refinement (Quality Control Loop):
+
+Iteration: reviewer analyzes the {appealletter}'s grammar, tone, and persuasiveness, checking specifically if the {evidence} has been incorporated.
+
+Decision: If not approved, RefinerAgent rewrites the letter based on the critique. If approved, RefinerAgent calls the exit_loop() tool, terminating the Loop Agent.
+
+Final Output:
+
+Once the loop exits, FinalOutputPresenter outputs the final, professionally polished {final_appeal_letter} text to the user.
+
+Technical Implementation Details
+
+The system is built using the Google Agent Development Kit (ADK) and the Gemini API, ensuring robust, scalable, and observable execution.
+
+Component
+
+ADK Type
+
+Purpose
+
+Configuration Detail
+
+LLM Model
+
+Gemini
+
+Powers all LlmAgents
+
+gemini-2.5-flash-lite with robust retry_options
+
+claim_ally_agent
+
+LlmAgent
+
+Orchestrates the entire user interaction and workflow.
+
+Tool calls are highly conditional based on user input and eligibility check results.
+
+check_appeal_eligibility
+
+FunctionTool
+
+Checks if the denial date is within 180 days of the current date.
+
+Uses Python's datetime and timedelta for precise date calculations.
+
+ReviewPipeline
+
+SequentialAgent
+
+Enforces the strict, ordered workflow: Research → Write → Refine → Present.
+
+Acts as a container for the three main stages of the appeal.
+
+ResearchAssistant
+
+LlmAgent
+
+Gathers external information.
+
+Utilizes the built-in Google Search tool for real-time grounding.
+
+LetterRefinementLoop
+
+LoopAgent
+
+Guarantees quality and professional tone.
+
+max_iterations=3 prevents infinite loops while allowing for sufficient refinement.
+
+RefinerAgent
+
+Agent
+
+The gatekeeper of the loop.
+
+Crucially, it uses a FunctionTool(exit_loop) to programmatically exit the loop, rather than relying on an LLM instruction.
+
+Conclusion & Future Scope
+
+The Claim Ally Agent represents a powerful application of multi-agent orchestration for a high-stakes, time-sensitive administrative task. By combining specialized tools for validation and research with an iterative quality-control loop, it consistently delivers a high-quality, professional appeal letter.
+
+Future Experiments
+
+Denial Code Integration: Expand check_appeal_eligibility to recognize common denial codes and automatically suggest appropriate research queries to the ResearchAssistant.
+
+Policy Retrieval: Integrate a tool capable of searching internal policy documents (e.g., via a document retrieval system) rather than solely relying on public Google Search results.
+
+Dynamic Iteration: Introduce dynamic logic to the LetterRefinementLoop to allow more than 3 iterations if the critique severity is high, ensuring quality regardless of the draft's starting point.
